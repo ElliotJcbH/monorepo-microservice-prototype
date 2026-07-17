@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service SessionService {
+    rpc GrantSession(GrantSessionRequest) returns (GrantSessionResponse) {}
+    rpc VerifySession(VerifySessionRequest) returns (VerifySessionResponse) {}
+    rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse) {} 
+    rpc RenewSession(RenewSessionRequest) returns (RenewSessionResponse) {}
+}
+
+message SessionInfo {
+    string access_token = 1;
+    string refresh_token = 2;
+    SessionUserInfo user = 3;
+    google.protobuf.Timestamp iat = 4;
+    google.protobuf.Timestamp exp = 5;
+}
+
+message SessionUserInfo {
+    string user_id = 1;
+    string username = 2;
+    string email = 3;
+    string role = 4; 
+    bool is_verifed = 5;
+    google.protobuf.Timestamp created_at = 6;
+}
+
+message GrantSessionRequest {
+    string email = 1; 
+    string password = 2;
+}
+
+message GrantSessionResponse {
+    SessionInfo session = 1;
+}
+
+message VerifySessionRequest {
+    string access_token = 1;
+}
+
+message VerifySessionResponse {
+    bool valid = 1;
+}
+
+message RevokeSessionRequest {
+    string access_token = 1;
+    string refresh_token = 3;
+}
+
+message RevokeSessionResponse {
+    bool revoked = 1;
+}
+
+message RenewSessionRequest {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RenewSessionResponse {
+    SessionInfo session = 1;
+}
