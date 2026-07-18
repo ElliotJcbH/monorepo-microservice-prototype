@@ -15,8 +15,8 @@ export interface SessionInfo {
   accessToken: string;
   refreshToken: string;
   user: SessionUserInfo | undefined;
-  iat: Timestamp | undefined;
-  exp: Timestamp | undefined;
+  iat: number;
+  exp: number;
 }
 
 export interface SessionUserInfo {

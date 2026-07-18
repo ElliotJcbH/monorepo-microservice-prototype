@@ -6,32 +6,44 @@ import {
     RenewSessionResponse,
     RevokeSessionRequest,
     RevokeSessionResponse,
-    SessionServiceClient,
     VerifySessionRequest,
     VerifySessionResponse,
 } from 'proto-gen/auth/v1/session';
-import { Observable } from 'rxjs';
+import { from, map, Observable } from 'rxjs';
+import { TokenService } from '../common/providers/token/token.service';
 
 @Injectable()
-export class SessionService implements SessionServiceClient {
-    grantSession(
+export class SessionService {
+    constructor(private tokenService: TokenService) {}
+
+    async grantSession(
         request: GrantSessionRequest,
-    ): Observable<GrantSessionResponse> {
-        throw new Error('Method not implemented.');
+    ): Promise<GrantSessionResponse> {
+        // return from(
+        //     this.tokenService.createTokens('', request.email, request.password),
+        // ).pipe(map((session) => ({ session })));
+        return {
+            session: await this.tokenService.createTokens(
+                '',
+                request.email,
+                request.password,
+            ),
+        };
     }
+
     verifySession(
         request: VerifySessionRequest,
-    ): Observable<VerifySessionResponse> {
+    ): Promise<VerifySessionResponse> {
         throw new Error('Method not implemented.');
     }
+
     revokeSession(
         request: RevokeSessionRequest,
-    ): Observable<RevokeSessionResponse> {
+    ): Promise<RevokeSessionResponse> {
         throw new Error('Method not implemented.');
     }
-    renewSession(
-        request: RenewSessionRequest,
-    ): Observable<RenewSessionResponse> {
+
+    renewSession(request: RenewSessionRequest): Promise<RenewSessionResponse> {
         throw new Error('Method not implemented.');
     }
 }

@@ -3,7 +3,6 @@ import {
     Injectable,
     InternalServerErrorException,
     OnModuleInit,
-    UnauthorizedException,
 } from '@nestjs/common';
 import {
     GrantSessionResponse,

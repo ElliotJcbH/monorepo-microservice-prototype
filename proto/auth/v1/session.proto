@@ -15,8 +15,8 @@ message SessionInfo {
     string access_token = 1;
     string refresh_token = 2;
     SessionUserInfo user = 3;
-    google.protobuf.Timestamp iat = 4;
-    google.protobuf.Timestamp exp = 5;
+    uint64 iat = 4;
+    uint64 exp = 5;
 }
 
 message SessionUserInfo {

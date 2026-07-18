@@ -11,7 +11,11 @@ async function bootstrap() {
             transport: Transport.GRPC,
             options: {
                 package: 'auth',
-                protoPath: join(process.cwd(), 'proto/auth/session.proto'), // TODO: Update to relative path with __dirname for compatibility with containerization?
+                protoPath: [
+                    join(process.cwd(), 'proto/auth/session.proto'),
+                    join(process.cwd(), 'proto/auth/password.proto'),
+                    join(process.cwd(), 'proto/auth/well-known.proto'),
+                ], // TODO: Update to relative path with __dirname for compatibility with containerization?
                 url: '0.0.0.0:5001',
             },
         },

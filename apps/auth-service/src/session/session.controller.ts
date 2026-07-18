@@ -10,25 +10,25 @@ export class SessionController implements session.SessionServiceController {
 
     grantSession(
         data: session.GrantSessionRequest,
-    ): Observable<session.GrantSessionResponse> {
+    ): Promise<session.GrantSessionResponse> {
         return this.sessionService.grantSession(data);
     }
 
     revokeSession(
         data: session.RevokeSessionRequest,
-    ): Observable<session.RevokeSessionResponse> {
+    ): Promise<session.RevokeSessionResponse> {
         return this.sessionService.revokeSession(data);
     }
 
     verifySession(
         data: session.VerifySessionRequest,
-    ): Observable<session.VerifySessionResponse> {
+    ): Promise<session.VerifySessionResponse> {
         return this.sessionService.verifySession(data);
     }
 
     renewSession(
         data: session.RenewSessionRequest,
-    ): Observable<session.RenewSessionResponse> {
+    ): Promise<session.RenewSessionResponse> {
         return this.sessionService.renewSession(data);
     }
 }
