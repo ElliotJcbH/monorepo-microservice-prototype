@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import IAccessTokenPayload from '../../interfaces/access-token-payload.interface';
-import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session';
+import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import * as argon2 from 'argon2';
 import crypto from 'node:crypto';
 import { RpcException } from '@nestjs/microservices';

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service UserService {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {};
+    rpc GetUser(GetUserRequest) returns (GetUserResponse) {};
+    rpc UpdateUserData(UpdateUserDataRequest) returns (UpdateUserDataResponse) {};
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {};
+}
+
+message User {
+    string user_id = 1;
+    string username = 2;
+    string email = 3;
+    string role = 4; 
+    bool is_verifed = 5;
+    google.protobuf.Timestamp created_at = 6;
+} 
+
+
+message CreateUserRequest {
+    string email = 1;
+    string password = 2;
+    string username = 3;
+}
+message CreateUserResponse {    
+    User user = 1;
+}
+
+
+message GetUserRequest {
+    string user_id = 1;
+}
+message GetUserResponse {
+    User user = 1;
+}
+
+
+message UpdateUserDataRequest {
+    string user_id = 1;
+    optional string username = 2;
+}
+message UpdateUserDataResponse {
+    User user = 1;
+}
+
+
+message DeleteUserRequest {
+    string user_id = 1;
+}
+message DeleteUserResponse {
+    string user_id = 1;
+}

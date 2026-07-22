@@ -8,8 +8,7 @@ import {
     RevokeSessionResponse,
     VerifySessionRequest,
     VerifySessionResponse,
-} from 'proto-gen/auth/v1/session';
-import { from, map, Observable } from 'rxjs';
+} from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
 
 @Injectable()

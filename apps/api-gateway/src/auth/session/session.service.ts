@@ -10,7 +10,7 @@ import {
     RevokeSessionResponse,
     SessionServiceClient,
     VerifySessionResponse,
-} from 'proto-gen/auth/v1/session';
+} from 'proto-gen/auth/v1/session_pb';
 import type { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { ProtoServices } from '@app/common/types/protoservice.types';
 import { GrantSessionDto } from '../common/dtos/grant-session.dto';

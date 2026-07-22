@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { GrantSessionDto } from '../common/dtos/grant-session.dto';
-import { SessionInfo } from 'proto-gen/auth/v1/session';
+import { SessionInfo } from 'proto-gen/auth/v1/session_pb';
 import { Token } from '../common/decorators/token.decorator';
 import { Cookies } from '../common/decorators/cookie.decorator';
 

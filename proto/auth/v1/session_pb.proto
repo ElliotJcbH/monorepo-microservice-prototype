@@ -28,37 +28,37 @@ message SessionUserInfo {
     google.protobuf.Timestamp created_at = 6;
 }
 
+
 message GrantSessionRequest {
     string email = 1; 
     string password = 2;
 }
-
 message GrantSessionResponse {
     SessionInfo session = 1;
 }
 
+
 message VerifySessionRequest {
     string access_token = 1;
 }
-
 message VerifySessionResponse {
     bool valid = 1;
 }
+
 
 message RevokeSessionRequest {
     string access_token = 1;
     string refresh_token = 3;
 }
-
 message RevokeSessionResponse {
     bool revoked = 1;
 }
+
 
 message RenewSessionRequest {
     string access_token = 1;
     string refresh_token = 2;
 }
-
 message RenewSessionResponse {
     SessionInfo session = 1;
 }

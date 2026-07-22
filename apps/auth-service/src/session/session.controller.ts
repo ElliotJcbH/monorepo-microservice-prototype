@@ -1,7 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { SessionService } from './session.service';
-import * as session from 'proto-gen/auth/v1/session';
-import { Observable, of } from 'rxjs';
+import * as session from 'proto-gen/auth/v1/session_pb';
 
 @Controller()
 @session.SessionServiceControllerMethods()
