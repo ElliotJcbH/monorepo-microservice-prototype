@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package auth.v1;
+
+service IdentityService {
+    rpc GetChangeEmailToken(GetChangeEmailTokenRequest) returns (GetChangeEmailTokenResponse) {};
+    rpc ChangeUserEmail(ChangeUserEmailRequest) returns (ChangeUserEmailResponse) {};
+    rpc GetUserVrfCode(GetUserVrfCodeRequest) returns (GetUserVrfCodeResponse) {};
+    rpc VerifyUserVrfCode(VerifyUserVrfCodeRequest) returns (VerifyUserVrfCodeResponse) {};
+}
+
+
+message GetChangeEmailTokenRequest {
+    string user_id = 1;
+}
+message GetChangeEmailTokenResponse {
+    string token = 1;
+}
+
+
+message ChangeUserEmailRequest {
+    string user_id = 1;
+    string token = 2;
+    string new_email = 3;
+}
+message ChangeUserEmailResponse {
+    bool is_changed = 1;
+}
+
+
+message GetUserVrfCodeRequest {
+    string user_id = 1;
+}
+message GetUserVrfCodeResponse {
+    bool is_sent = 1;
+}
+
+
+message VerifyUserVrfCodeRequest {
+    string user_id = 1;
+    string code = 2;
+} 
+message VerifyUserVrfCodeResponse {
+    bool is_set = 1;
+}
