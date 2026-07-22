@@ -10,10 +10,14 @@ import {
     VerifySessionResponse,
 } from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
+import { DatabaseService } from '../common/providers/database/database.service';
 
 @Injectable()
 export class SessionService {
-    constructor(private tokenService: TokenService) {}
+    constructor(
+        private tokenService: TokenService,
+        private db: DatabaseService,
+    ) {}
 
     async grantSession(
         request: GrantSessionRequest,
