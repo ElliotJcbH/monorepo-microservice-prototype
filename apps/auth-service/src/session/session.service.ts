@@ -62,12 +62,12 @@ export class SessionService implements OnModuleInit {
                         () => new GrpcException(err.code, err.details),
                     );
                 }),
-            ); // maybe add getUserByEmail?
+            );
 
         const user = (await firstValueFrom(res)).user;
 
         if (!user) {
-            console.log(
+            console.error(
                 'Error [Not Found Exception] User with that email does not exist',
             );
             throw new NotFoundException('User with that email does not exist'); // reminder: only throw grpc exceptions in pipes
@@ -97,7 +97,7 @@ export class SessionService implements OnModuleInit {
         );
 
         if (!payload) {
-            console.log(`Error [Bad Request Exception] Invalid access token`);
+            console.error(`Error [Bad Request Exception] Invalid access token`);
             throw new BadRequestException('Invalid access token');
         }
 
@@ -106,14 +106,28 @@ export class SessionService implements OnModuleInit {
         };
     }
 
-    revokeSession(
+    async revokeSession(
         request: RevokeSessionRequest,
     ): Promise<RevokeSessionResponse> {
-        const { accessToken, refreshToken } = request; // access token WILL BE valid after being checked by guard
+        const { accessToken, refreshToken } = request;
 
-        const isDeleted = this.tokenService.deleteRefreshToken(refreshToken);
+        const isDeleted = await this.tokenService.deleteRefreshToken(
+            accessToken,
+            refreshToken,
+        );
 
-        throw new Error('Method not implemented.');
+        if (!isDeleted) {
+            console.error(
+                `Error [Internal Server Error] Failed to delete refresh token`,
+            );
+            throw new InternalServerErrorException(
+                'Failed to delete refresh token',
+            );
+        }
+
+        return {
+            revoked: true,
+        };
     }
 
     renewSession(request: RenewSessionRequest): Promise<RenewSessionResponse> {

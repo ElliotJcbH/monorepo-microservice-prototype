@@ -51,7 +51,7 @@ export class SessionService implements OnModuleInit {
         const session = (await firstValueFrom(res)).session;
 
         if (!session) {
-            console.log('Error [Internal Server Error] Session is undefined');
+            console.error('Error [Internal Server Error] Session is undefined');
             throw new InternalServerErrorException('Failed to create session');
         }
 
@@ -98,7 +98,7 @@ export class SessionService implements OnModuleInit {
         const session = (await firstValueFrom(res)).session;
 
         if (!session) {
-            console.log('Error [Internal Server Error] Session is undefined');
+            console.error('Error [Internal Server Error] Session is undefined');
             throw new InternalServerErrorException('Failed to create session');
         }
 

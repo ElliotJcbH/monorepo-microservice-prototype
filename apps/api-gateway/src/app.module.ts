@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { SessionModule } from './auth/session/session.module';
+import { UserModule } from './user/user/user.module';
 
 @Module({
     imports: [
@@ -11,6 +12,7 @@ import { SessionModule } from './auth/session/session.module';
             },
         ]),
         SessionModule,
+        UserModule,
     ],
     controllers: [],
     providers: [],
