@@ -1,6 +1,8 @@
 import {
+    BadRequestException,
     Inject,
     Injectable,
+    InternalServerErrorException,
     NotFoundException,
     OnModuleInit,
 } from '@nestjs/common';
@@ -19,7 +21,10 @@ import { TokenService } from '../common/providers/token/token.service';
 import { DatabaseService } from '../common/providers/database/database.service';
 import { PasswordService } from '../password/password.service';
 import type { ClientGrpc } from '@nestjs/microservices';
-import { GetUserByEmailResponse, UserServiceClient } from 'proto-gen/user/v1/user_pb';
+import {
+    GetUserByEmailResponse,
+    UserServiceClient,
+} from 'proto-gen/user/v1/user_pb';
 import { ProtoServices } from '@app/common/types/protoservice.types';
 import { catchError, firstValueFrom, Observable, take, throwError } from 'rxjs';
 import { logGrpcException } from '@app/common/utils/exception-logger';
@@ -86,15 +91,28 @@ export class SessionService implements OnModuleInit {
         // ).pipe(map((session) => ({ session })));
     }
 
-    verifySession(
-        request: VerifySessionRequest,
-    ): Promise<VerifySessionResponse> {
-        throw new Error('Method not implemented.');
+    verifySession(request: VerifySessionRequest): VerifySessionResponse {
+        const payload = this.tokenService.verifyAccessToken(
+            request.accessToken,
+        );
+
+        if (!payload) {
+            console.log(`Error [Bad Request Exception] Invalid access token`);
+            throw new BadRequestException('Invalid access token');
+        }
+
+        return {
+            valid: true,
+        };
     }
 
     revokeSession(
         request: RevokeSessionRequest,
     ): Promise<RevokeSessionResponse> {
+        const { accessToken, refreshToken } = request; // access token WILL BE valid after being checked by guard
+
+        const isDeleted = this.tokenService.deleteRefreshToken(refreshToken);
+
         throw new Error('Method not implemented.');
     }
 

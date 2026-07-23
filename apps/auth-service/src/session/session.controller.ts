@@ -21,7 +21,7 @@ export class SessionController implements session.SessionServiceController {
 
     verifySession(
         data: session.VerifySessionRequest,
-    ): Promise<session.VerifySessionResponse> {
+    ): session.VerifySessionResponse {
         return this.sessionService.verifySession(data);
     }
 
