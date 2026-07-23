@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Pool } from 'pg';
+import { Pool, QueryResult, QueryResultRow, Submittable } from 'pg';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
@@ -28,8 +28,19 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         console.log('Database connection closed successfully')
     }
 
-    async query(text: string, params?: any[]) {
-        return await this.pool.query(text, params);
+    async query<T extends QueryResultRow = QueryResultRow>(
+        text: string,
+        params?: unknown[],
+    ): Promise<QueryResult<T>> {
+        return this.pool.query<T>(text, params);
+    }
+
+    async queryOne<T extends QueryResultRow = QueryResultRow>(
+        text: string,
+        params?: unknown[],
+    ): Promise<T> {
+        const res = await this.pool.query<T>(text, params);
+        return res.rows[0];
     }
 
     async getClient() {
