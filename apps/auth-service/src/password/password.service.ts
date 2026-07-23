@@ -10,10 +10,9 @@ import * as argon2 from 'argon2';
 @Injectable()
 export class PasswordService {
     constructor(private db: DatabaseService) {}
-    
+
     async verifyPassword(
-        request: VerifyPasswordRequest,
-    ): Promise<VerifyPasswordResponse> {
+        request: VerifyPasswordRequest,): Promise<VerifyPasswordResponse> {
         const { email, password } = request;
 
         let hashedPassword: string;

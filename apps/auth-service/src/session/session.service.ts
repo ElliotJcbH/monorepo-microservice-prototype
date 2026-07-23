@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+    Inject,
+    Injectable,
+    NotFoundException,
+    OnModuleInit,
+} from '@nestjs/common';
 import {
     GrantSessionRequest,
     GrantSessionResponse,
@@ -13,36 +18,67 @@ import {
 import { TokenService } from '../common/providers/token/token.service';
 import { DatabaseService } from '../common/providers/database/database.service';
 import { PasswordService } from '../password/password.service';
-import { RpcException } from '@nestjs/microservices';
+import type { ClientGrpc } from '@nestjs/microservices';
+import { GetUserByEmailResponse, UserServiceClient } from 'proto-gen/user/v1/user_pb';
+import { ProtoServices } from '@app/common/types/protoservice.types';
+import { catchError, firstValueFrom, Observable, take, throwError } from 'rxjs';
+import { logGrpcException } from '@app/common/utils/exception-logger';
+import { ServiceError, status } from '@grpc/grpc-js';
+import { GrpcException } from '@app/common/classes/exceptions/grpc.exception';
 
 @Injectable()
-export class SessionService {
+export class SessionService implements OnModuleInit {
+    private extUserService!: UserServiceClient;
+
     constructor(
         private tokenService: TokenService,
         private passwordService: PasswordService,
         private db: DatabaseService,
+        @Inject('USER_PACKAGE') private userClient: ClientGrpc,
     ) {}
+
+    onModuleInit() {
+        this.extUserService = this.userClient.getService<UserServiceClient>(
+            ProtoServices.UserService,
+        );
+    }
 
     async grantSession(
         request: GrantSessionRequest,
     ): Promise<GrantSessionResponse> {
-        // never mind this should all be in api gateway, no>
-        // await this.passwordService.verifyPassword(request);
-        // const user = this.userServiceClient.getUserSession();
+        await this.passwordService.verifyPassword(request);
+        const res: Observable<GetUserByEmailResponse> = this.extUserService
+            .getUserByEmail({ email: request.email })
+            .pipe(
+                take(1),
+                catchError((err: ServiceError) => {
+                    logGrpcException(err);
+                    return throwError(
+                        () => new GrpcException(err.code, err.details),
+                    );
+                }),
+            ); // maybe add getUserByEmail?
+
+        const user = (await firstValueFrom(res)).user;
+
+        if (!user) {
+            console.log(
+                'Error [Not Found Exception] User with that email does not exist',
+            );
+            throw new NotFoundException('User with that email does not exist'); // reminder: only throw grpc exceptions in pipes
+        }
 
         const userData: SessionUserInfo = {
-            userId: '',
-            username: '',
-            email: '',
-            role: '',
-            isVerifed: false,
-            createdAt: undefined
+            userId: user.userId,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            isVerifed: user.isVerifed,
+            createdAt: user.createdAt,
         };
 
         return {
-            session: await this.tokenService.createTokens(
-                userData
-            ),
+            session: await this.tokenService.createTokens(userData),
         };
 
         // return from(

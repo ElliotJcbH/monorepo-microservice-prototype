@@ -6,7 +6,8 @@ import "google/protobuf/timestamp.proto";
 
 service UserService {
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {};
-    rpc GetUser(GetUserRequest) returns (GetUserResponse) {};
+    rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse) {};
+    rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserByEmailResponse) {};
     rpc UpdateUserData(UpdateUserDataRequest) returns (UpdateUserDataResponse) {};
     rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {};
 }
@@ -31,10 +32,18 @@ message CreateUserResponse {
 }
 
 
-message GetUserRequest {
+message GetUserByIdRequest {
     string user_id = 1;
 }
-message GetUserResponse {
+message GetUserByIdResponse {
+    User user = 1;
+}
+
+
+message GetUserByEmailRequest {
+    string email = 1;
+}
+message GetUserByEmailResponse {
     User user = 1;
 }
 

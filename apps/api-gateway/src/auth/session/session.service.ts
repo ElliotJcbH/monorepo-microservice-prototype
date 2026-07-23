@@ -21,7 +21,7 @@ import { logGrpcException } from '@app/common/utils/exception-logger';
 
 @Injectable()
 export class SessionService implements OnModuleInit {
-    private extSessionService: SessionServiceClient;
+    private extSessionService!: SessionServiceClient;
 
     constructor(@Inject('SESSION_PACKAGE') private authClient: ClientGrpc) {}
 

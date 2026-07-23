@@ -11,7 +11,7 @@ import { join } from 'path';
                 transport: Transport.GRPC,
                 options: {
                     package: 'auth',
-                    protoPath: join(process.cwd(), 'proto/auth/session_pb.proto'),
+                    protoPath: join(process.cwd(), 'proto/auth/v1/session_pb.proto'),
                     url: 'localhost:5001',
                 },
             },
