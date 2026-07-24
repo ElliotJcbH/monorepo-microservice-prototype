@@ -1,22 +1,19 @@
 import { NestFactory } from '@nestjs/core';
-import { AuthServiceAppModule } from './auth-service-app.module';
+import { UserServiceModule } from './user-service.module';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { join } from 'path';
 
-// Define other proto package services here
 async function bootstrap() {
     const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-        AuthServiceAppModule,
+        UserServiceModule,
         {
             transport: Transport.GRPC,
             options: {
-                package: 'auth',
+                package: 'user',
                 protoPath: [
-                    join(process.cwd(), 'proto/auth/v1/session_pb.proto'),
-                    join(process.cwd(), 'proto/auth/v1/password_pb.proto'),
-                    join(process.cwd(), 'proto/auth/v1/well-known_pb.proto'),
+                    join(process.cwd(), 'proto/auth/v1/user_pb.proto'),
                 ], // TODO: Update to relative path with __dirname for compatibility with containerization?
-                url: '0.0.0.0:5001',
+                url: '0.0.0.0:5002',
             },
         },
     );
