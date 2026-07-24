@@ -8,6 +8,7 @@ import {
     GrantSessionResponse,
     RenewSessionResponse,
     RevokeSessionResponse,
+    SessionInfo,
     SessionServiceClient,
     VerifySessionResponse,
 } from 'proto-gen/auth/v1/session_pb';
@@ -32,7 +33,7 @@ export class SessionService implements OnModuleInit {
             );
     }
 
-    async grantSession(data: GrantSessionDto) {
+    async grantSession(data: GrantSessionDto): Promise<SessionInfo> {
         const res: Observable<GrantSessionResponse> = this.extSessionService
             .grantSession({
                 email: data.email,
@@ -58,7 +59,10 @@ export class SessionService implements OnModuleInit {
         return session;
     }
 
-    async revokeSession(accessToken: string, refreshToken: string) {
+    async revokeSession(
+        accessToken: string,
+        refreshToken: string,
+    ): Promise<boolean> {
         const res: Observable<RevokeSessionResponse> = this.extSessionService
             .revokeSession({
                 accessToken,
@@ -79,7 +83,10 @@ export class SessionService implements OnModuleInit {
         return isRevoked;
     }
 
-    async renewSession(accessToken: string, refreshToken: string) {
+    async renewSession(
+        accessToken: string,
+        refreshToken: string,
+    ): Promise<SessionInfo> {
         const res: Observable<RenewSessionResponse> = this.extSessionService
             .renewSession({
                 accessToken,
@@ -105,7 +112,7 @@ export class SessionService implements OnModuleInit {
         return session;
     }
 
-    async verifySession(accessToken: string) {
+    async verifySession(accessToken: string): Promise<boolean> {
         const res: Observable<VerifySessionResponse> = this.extSessionService
             .verifySession({
                 accessToken,
