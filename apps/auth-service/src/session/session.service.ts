@@ -18,7 +18,7 @@ import {
     VerifySessionResponse,
 } from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
-import { DatabaseService } from '../common/providers/database/database.service';
+import { DatabaseService } from '../../../../libs/common/src/providers/database/database.service';
 import { PasswordService } from '../password/password.service';
 import type { ClientGrpc } from '@nestjs/microservices';
 import {

@@ -5,7 +5,7 @@ import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import * as argon2 from 'argon2';
 import crypto from 'node:crypto';
 import { RpcException } from '@nestjs/microservices';
-import { DatabaseService } from '../database/database.service';
+import { DatabaseService } from '../../../../../../libs/common/src/providers/database/database.service';
 import KEY_CONFIG from '../../configs/keys.config';
 
 @Injectable()

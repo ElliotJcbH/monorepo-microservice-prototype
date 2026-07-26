@@ -5,7 +5,7 @@ import {
     VerifyPasswordRequest,
     VerifyPasswordResponse,
 } from 'proto-gen/auth/v1/password_pb';
-import { DatabaseService } from '../common/providers/database/database.service';
+import { DatabaseService } from '../../../../libs/common/src/providers/database/database.service';
 import { RpcException } from '@nestjs/microservices';
 import * as argon2 from 'argon2';
 
@@ -28,16 +28,19 @@ export class PasswordService {
                 RETURNING user_id
             `;
 
-            const res = await this.db.queryOne<{ user_id: string }>(query, [hashedPassword, userId]);
+            const res = await this.db.queryOne<{ user_id: string }>(query, [
+                hashedPassword,
+                userId,
+            ]);
 
-            if(!res || !res.user_id) throw new Error();
+            if (!res || !res.user_id) throw new Error();
         } catch (e) {
             console.error('Error [Database Error] Failed to store password', e);
             throw new InternalServerErrorException('Failed to store password');
         }
 
         return {
-           isStored: true,
+            isStored: true,
         };
     }
 

@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
-    "proto:gen": "protoc --plugin=protoc-gen-ts_proto=node_modules\\.bin\\protoc-gen-ts_proto.cmd --ts_proto_out=./proto-gen --ts_proto_opt=nestJs=true --proto_path=./proto"
+    "proto:gen": "protoc --plugin=protoc-gen-ts_proto=node_modules\\.bin\\protoc-gen-ts_proto.cmd --ts_proto_out=./proto-gen --ts_proto_opt=nestJs=true --ts_proto_opt=useDate=true --proto_path=./proto",
+    "buf:gen": "buf generate"
   },
   "dependencies": {
     "@bufbuild/buf": "^1.71.0",
