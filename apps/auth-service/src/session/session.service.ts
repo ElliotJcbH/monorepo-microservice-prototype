@@ -20,7 +20,7 @@ import {
 import { TokenService } from '../common/providers/token/token.service';
 import { DatabaseService } from '../../../../libs/common/src/providers/database/database.service';
 import { PasswordService } from '../password/password.service';
-import type { ClientGrpc } from '@nestjs/microservices';
+import { RpcException, type ClientGrpc } from '@nestjs/microservices';
 import {
     GetUserByEmailResponse,
     UserServiceClient,
@@ -57,20 +57,28 @@ export class SessionService implements OnModuleInit {
             .pipe(
                 take(1),
                 catchError((err: ServiceError) => {
-                    logGrpcException(err);
-                    return throwError(
-                        () => new GrpcException(err.code, err.details),
+                    console.error(
+                        `Error [${status[err.code]}] ${err.message}`,
                     );
+                    throw new RpcException(err);
+                    // logGrpcException(err);
+                    // return throwError(
+                    //     () => new GrpcException(err.code, err.details), 
+                    // );
+                    // TODO: I dont think i should be using this in grpc service
                 }),
             );
 
-        const user = (await firstValueFrom(res)).user;
+        const user = (await firstValueFrom(res))?.user || undefined;
 
         if (!user) {
             console.error(
-                'Error [Not Found Exception] User with that email does not exist',
+                'Error [NOT FOUND] User with that email does not exist',
             );
-            throw new NotFoundException('User with that email does not exist'); // reminder: only throw grpc exceptions in pipes
+            throw new RpcException({
+                code: status.NOT_FOUND,
+                message: 'User with that email does not exist'
+            }); // reminder: only throw grpc exceptions in pipes
         }
 
         const userData: SessionUserInfo = {
@@ -82,8 +90,20 @@ export class SessionService implements OnModuleInit {
             createdAt: user.createdAt,
         };
 
+        const session = await this.tokenService.createTokens(userData);
+
+        if(!session) {
+            console.error(
+                'Error [UNKNOWN] Requested session is undefined'
+            );
+            throw new RpcException({
+                code: status.UNKNOWN,
+                message: 'Requested session is undefined'
+            })
+        }
+
         return {
-            session: await this.tokenService.createTokens(userData),
+            session
         };
 
         // return from(
@@ -97,8 +117,11 @@ export class SessionService implements OnModuleInit {
         );
 
         if (!payload) {
-            console.error(`Error [Bad Request Exception] Invalid access token`);
-            throw new BadRequestException('Invalid access token');
+            console.error(`Error [UNKNOWN] Payload is not parseable`);
+            throw new RpcException({
+                code: status.UNKNOWN,
+                message: 'Payload is not parseable'
+            });
         }
 
         return {

@@ -64,7 +64,7 @@ describe('UserService', () => {
         );
     });
 
-    it('should throw rpc exception on create user', async () => {
+    it('create user should throw rpc exception when user is falsy', async () => {
         mockDb.queryOne.mockResolvedValue(undefined);
 
         await expect(
@@ -124,4 +124,5 @@ describe('UserService', () => {
             message: "User does not exist"
         }));
     })
+
 });
