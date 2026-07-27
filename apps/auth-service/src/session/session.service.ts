@@ -13,6 +13,7 @@ import {
     RenewSessionResponse,
     RevokeSessionRequest,
     RevokeSessionResponse,
+    SessionInfo,
     SessionUserInfo,
     VerifySessionRequest,
     VerifySessionResponse,
@@ -30,6 +31,8 @@ import { catchError, firstValueFrom, Observable, take, throwError } from 'rxjs';
 import { logGrpcException } from '@app/common/utils/exception-logger';
 import { ServiceError, status } from '@grpc/grpc-js';
 import { GrpcException } from '@app/common/classes/exceptions/grpc.exception';
+import IAccessTokenPayload from '../common/interfaces/access-token-payload.interface';
+import e from 'express';
 
 @Injectable()
 export class SessionService implements OnModuleInit {
@@ -38,7 +41,6 @@ export class SessionService implements OnModuleInit {
     constructor(
         private tokenService: TokenService,
         private passwordService: PasswordService,
-        private db: DatabaseService,
         @Inject('USER_PACKAGE') private userClient: ClientGrpc,
     ) {}
 
@@ -52,58 +54,26 @@ export class SessionService implements OnModuleInit {
         request: GrantSessionRequest,
     ): Promise<GrantSessionResponse> {
         await this.passwordService.verifyPassword(request);
-        const res: Observable<GetUserByEmailResponse> = this.extUserService
-            .getUserByEmail({ email: request.email })
-            .pipe(
-                take(1),
-                catchError((err: ServiceError) => {
-                    console.error(
-                        `Error [${status[err.code]}] ${err.message}`,
-                    );
-                    throw new RpcException(err);
-                    // logGrpcException(err);
-                    // return throwError(
-                    //     () => new GrpcException(err.code, err.details), 
-                    // );
-                    // TODO: I dont think i should be using this in grpc service
-                }),
-            );
+        const userData = await this.getUserData(request.email);
 
-        const user = (await firstValueFrom(res))?.user || undefined;
+        const tokens = await this.tokenService.createTokens(userData);
 
-        if (!user) {
-            console.error(
-                'Error [NOT FOUND] User with that email does not exist',
-            );
-            throw new RpcException({
-                code: status.NOT_FOUND,
-                message: 'User with that email does not exist'
-            }); // reminder: only throw grpc exceptions in pipes
-        }
-
-        const userData: SessionUserInfo = {
-            userId: user.userId,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            isVerifed: user.isVerifed,
-            createdAt: user.createdAt,
-        };
-
-        const session = await this.tokenService.createTokens(userData);
-
-        if(!session) {
-            console.error(
-                'Error [UNKNOWN] Requested session is undefined'
-            );
+        if (!tokens.accessToken || !tokens.refreshToken || !tokens.payload) {
+            console.error('Error [UNKNOWN] Tokens were not properly created');
             throw new RpcException({
                 code: status.UNKNOWN,
-                message: 'Requested session is undefined'
-            })
+                message: 'Tokens were not properly created',
+            });
         }
 
+        const session = this.sessionBuilder(
+            tokens.accessToken,
+            tokens.refreshToken,
+            tokens.payload,
+        );
+
         return {
-            session
+            session,
         };
 
         // return from(
@@ -120,7 +90,7 @@ export class SessionService implements OnModuleInit {
             console.error(`Error [UNKNOWN] Payload is not parseable`);
             throw new RpcException({
                 code: status.UNKNOWN,
-                message: 'Payload is not parseable'
+                message: 'Payload is not parseable',
             });
         }
 
@@ -140,12 +110,11 @@ export class SessionService implements OnModuleInit {
         );
 
         if (!isDeleted) {
-            console.error(
-                `Error [Internal Server Error] Failed to delete refresh token`,
-            );
-            throw new InternalServerErrorException(
-                'Failed to delete refresh token',
-            );
+            console.error(`Error [UNKOWN] Refresh token was not deleted`);
+            throw new RpcException({
+                code: status.UNKNOWN,
+                message: 'Refresh token was not deleted',
+            });
         }
 
         return {
@@ -153,7 +122,102 @@ export class SessionService implements OnModuleInit {
         };
     }
 
-    renewSession(request: RenewSessionRequest): Promise<RenewSessionResponse> {
-        throw new Error('Method not implemented.');
+    async renewSession(
+        request: RenewSessionRequest,
+    ): Promise<RenewSessionResponse> {
+        const { accessToken, refreshToken } = request;
+        const payload: IAccessTokenPayload =
+            this.tokenService.decodeAccessToken(accessToken); // dont need to check because we have a guard
+
+        const userData = await this.getUserData(payload.user.email);
+
+        const tokens = await this.tokenService.renewAccessToken(
+            accessToken,
+            refreshToken,
+        );
+
+        if (!tokens.accessToken || !tokens.refreshToken || !tokens.payload) {
+            console.error(`Error [UNKOWN] Requested new access token is falsy`);
+            throw new RpcException({
+                code: status.UNKNOWN,
+                message: 'Requested new access token is falsy',
+            });
+        }
+
+        const session = this.sessionBuilder(
+            tokens.accessToken,
+            tokens.refreshToken,
+            {
+                ...tokens.payload,
+                user: userData,
+            },
+        );
+
+        return {
+            session,
+        };
+    }
+
+    private sessionBuilder(
+        accessToken: string,
+        refreshToken: string,
+        payload: IAccessTokenPayload,
+    ): SessionInfo {
+        const user: SessionUserInfo = {
+            userId: payload.user.userId,
+            username: payload.user.username,
+            email: payload.user.email,
+            role: payload.user.role,
+            isVerifed: payload.user.isVerifed,
+            createdAt: payload.user.createdAt,
+        };
+
+        return {
+            accessToken,
+            refreshToken,
+            user,
+            iat: payload.iat || 0, // iat, exp will never be 0
+            exp: payload.exp || 0,
+        };
+    }
+
+    private async getUserData(email: string): Promise<SessionUserInfo> {
+        const res: Observable<GetUserByEmailResponse> = this.extUserService
+            .getUserByEmail({ email })
+            .pipe(
+                take(1),
+                catchError((err: ServiceError) => {
+                    console.error(`Error [${status[err.code]}] ${err.message}`);
+                    throw new RpcException(err);
+                    // logGrpcException(err);
+                    // return throwError(
+                    //     () => new GrpcException(err.code, err.details),
+                    // );
+                    // TODO: I dont think i should be using this in grpc service
+                }),
+            );
+
+        const user = (await firstValueFrom(res))?.user || undefined;
+
+        if (!user) {
+            console.error(
+                'Error [NOT FOUND] User with that email does not exist',
+            );
+            throw new RpcException({
+                code: status.NOT_FOUND,
+                message: 'User with that email does not exist',
+            }); // reminder: only throw grpc exceptions in pipes
+        }
+
+        const userData: SessionUserInfo = {
+            userId: user.userId,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            isVerifed: user.isVerifed,
+            createdAt: user.createdAt,
+        };
+
+        return userData;
     }
 }

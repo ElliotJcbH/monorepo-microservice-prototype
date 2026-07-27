@@ -1,5 +1,5 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import IAccessTokenPayload from '../../interfaces/access-token-payload.interface';
 import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import * as argon2 from 'argon2';
@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import { RpcException } from '@nestjs/microservices';
 import { DatabaseService } from '../../../../../../libs/common/src/providers/database/database.service';
 import KEY_CONFIG from '../../configs/keys.config';
+import { status } from '@grpc/grpc-js';
 
 @Injectable()
 export class TokenService {
@@ -15,7 +16,11 @@ export class TokenService {
         private readonly db: DatabaseService,
     ) {}
 
-    async createTokens(data: SessionUserInfo): Promise<SessionInfo> {
+    async createTokens(data: SessionUserInfo): Promise<{
+        accessToken: string;
+        refreshToken: string;
+        payload: IAccessTokenPayload;
+    }> {
         const accessToken = this.createAccessToken(data);
         const payload: IAccessTokenPayload =
             this.jwtService.decode(accessToken);
@@ -25,21 +30,10 @@ export class TokenService {
             payload.jti || '',
         );
 
-        const user: SessionUserInfo = {
-            userId: data.userId,
-            username: data.username,
-            email: data.email,
-            role: data.role,
-            isVerifed: data.isVerifed,
-            createdAt: data.createdAt,
-        };
-
         return {
             accessToken,
             refreshToken,
-            user,
-            iat: payload.iat || 0, // iat, exp will never be 0
-            exp: payload.exp || 0,
+            payload,
         };
     }
 
@@ -62,11 +56,11 @@ export class TokenService {
     }
 
     async createRefreshToken(userId: string, jwtId: string): Promise<string> {
-        // 1. Upload to db: hash, jwtid
-        // 2. return key
         if (!jwtId) {
-            console.log('Error [Server Error] Failed to create token'); // TODO: Fix this bullshit
-            throw new RpcException('Failed to create token');
+            throw new RpcException({
+                code: status.INVALID_ARGUMENT,
+                message: 'Failed to create token: Missing jwtId'
+            });
         }
 
         const key = crypto.randomBytes(32).toString('hex');
@@ -85,13 +79,12 @@ export class TokenService {
                 [jwtId, userId, hash, expiresAt],
             );
 
-            if (res.refresh_token) throw new Error();
+            if (!res.refresh_token) throw new Error();
         } catch (e) {
-            console.error(
-                'Error [Database Error] Failed upload refresh token',
-                e,
-            );
-            throw new RpcException('Failed to upload refresh token');
+            throw new RpcException({
+                code: status.INTERNAL,
+                message: `Failed to upload refresh token: ${e}`
+            });
         }
 
         return key;
@@ -100,7 +93,11 @@ export class TokenService {
     async renewAccessToken(
         accessToken: string,
         refreshToken: string,
-    ): Promise<string> {
+    ): Promise<{
+        accessToken: string;
+        refreshToken: string;
+        payload: IAccessTokenPayload;
+    }> {
         // 1. get refresh_token with jwtId -> refresh_token
         // 2. refresh_token -> verify with argon2.verify() -> valid
         // 3. valid? -> create accessToken -> accessToken
@@ -137,7 +134,11 @@ export class TokenService {
             throw new RpcException('Failed to update jwt_id');
         }
 
-        return newAccessToken;
+        return {
+            accessToken: newAccessToken,
+            refreshToken,
+            payload: newPayload,
+        };
     }
 
     async deleteRefreshToken(
@@ -178,13 +179,19 @@ export class TokenService {
         return true;
     }
 
-    verifyAccessToken(accessToken: string) {
+    verifyAccessToken(accessToken: string, options?: JwtVerifyOptions): IAccessTokenPayload { // TODO: maybe dont handle the rpc exception here? Throw a generic error first?
+        try {
+            return this.jwtService.verify(accessToken, options || {});
+        } catch (e) {
+            throw new UnauthorizedException('The provided access token is invalid');
+        }
+    }
+
+    decodeAccessToken(accessToken: string): IAccessTokenPayload {
         const payload: IAccessTokenPayload =
-            this.jwtService.verify(accessToken);
+            this.jwtService.decode(accessToken);
 
-        if (payload) return payload;
-
-        return null;
+        return payload;
     }
 
     async verifyRefreshToken(
