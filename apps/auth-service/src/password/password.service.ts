@@ -45,10 +45,9 @@ export class PasswordService {
     }
 
     async verifyPassword(
-        request: VerifyPasswordRequest,
-    ): Promise<VerifyPasswordResponse> {
-        const { email, password } = request;
-
+        email: string,
+        password: string
+    ): Promise<boolean> {
         let hashedPassword: string;
 
         try {
@@ -81,8 +80,6 @@ export class PasswordService {
             throw new RpcException('Incorrect credentials');
         }
 
-        return {
-            isValid,
-        };
+        return isValid;
     }
 }

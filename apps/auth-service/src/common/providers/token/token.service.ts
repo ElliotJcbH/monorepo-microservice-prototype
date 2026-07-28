@@ -55,12 +55,17 @@ export class TokenService {
         return accessToken;
     }
 
+    /**
+     * @throws {RpcException} if the token is expired or malformed
+     * @throws {InternalServerErrorException} if the database query fails
+    */
     async createRefreshToken(userId: string, jwtId: string): Promise<string> {
         if (!jwtId) {
             throw new RpcException({
                 code: status.INVALID_ARGUMENT,
                 message: 'Failed to create token: Missing jwtId'
             });
+            throw new TypeError('jwtId must be a valid string');
         }
 
         const key = crypto.randomBytes(32).toString('hex');
@@ -90,6 +95,9 @@ export class TokenService {
         return key;
     }
 
+    /**
+     * @throws {} if the update query for jwt_id fails 
+    */
     async renewAccessToken(
         accessToken: string,
         refreshToken: string,

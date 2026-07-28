@@ -1,33 +1,63 @@
 import { Controller } from '@nestjs/common';
 import { SessionService } from './session.service';
 import * as session from 'proto-gen/auth/v1/session_pb';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
+import { GrantSessionRequestDto, RevokeSessionRequestDto } from '../common/dtos/auth-session-controller.dto';
 
 @Controller()
 @session.SessionServiceControllerMethods()
 export class SessionController implements session.SessionServiceController {
     constructor(private readonly sessionService: SessionService) {}
 
-    grantSession(
-        request: session.GrantSessionRequest,
+    async grantSession(
+        request: GrantSessionRequestDto,
     ): Promise<session.GrantSessionResponse> {
-        return this.sessionService.grantSession(request);
+        const res = await this.sessionService.grantSession(
+            request.email,
+            request.password,
+        );
+
+        return {
+            session: res,
+        };
     }
 
-    revokeSession(
-        request: session.RevokeSessionRequest,
+    async revokeSession(
+        request: RevokeSessionRequestDto,
     ): Promise<session.RevokeSessionResponse> {
-        return this.sessionService.revokeSession(request);
+        const isRevoked = await this.sessionService.revokeSession(
+                request.accessToken,
+                request.refreshToken,
+            );        
+
+        return {
+            revoked: isRevoked,
+        };
     }
 
     verifySession(
         request: session.VerifySessionRequest,
     ): session.VerifySessionResponse {
-        return this.sessionService.verifySession(request);
+        const payload = this.sessionService.verifySession(
+            request.accessToken,
+        );
+
+        return {
+            valid: payload ? true : false,
+        };
     }
 
-    renewSession(
+    async renewSession(
         request: session.RenewSessionRequest,
     ): Promise<session.RenewSessionResponse> {
-        return this.sessionService.renewSession(request);
+        const res = await this.sessionService.renewSession(
+            request.accessToken,
+            request.refreshToken
+        );
+
+        return {
+            session: res
+        }
     }
 }
