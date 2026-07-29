@@ -1,8 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { SessionService } from './session.service';
 import * as session from 'proto-gen/auth/v1/session_pb';
-import { RpcException } from '@nestjs/microservices';
-import { status } from '@grpc/grpc-js';
 import { GrantSessionRequestDto, RevokeSessionRequestDto } from '../common/dtos/auth-session-controller.dto';
 
 @Controller()

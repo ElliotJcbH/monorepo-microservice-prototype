@@ -6,7 +6,7 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { GrpcException } from '@app/common/classes/exceptions/grpc.exception';
+import { GrpcException } from '@app/common/classes/errors/grpc.exception';
 
 @Catch(GrpcException)
 export class GrpcToHttpExceptionFilter implements ExceptionFilter {

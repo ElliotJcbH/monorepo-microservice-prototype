@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AuthServiceAppModule } from './auth-service-app.module';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { join } from 'path';
+import { ValidationPipe } from '@nestjs/common';
 
 // Define other proto package services here
 async function bootstrap() {
@@ -20,6 +21,7 @@ async function bootstrap() {
             },
         },
     );
+    app.useGlobalPipes(new ValidationPipe());
     await app.listen();
 }
 void bootstrap();

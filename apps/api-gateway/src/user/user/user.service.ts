@@ -1,4 +1,4 @@
-import { GrpcException } from '@app/common/classes/exceptions/grpc.exception';
+import { GrpcException } from '@app/common/classes/errors/grpc.exception';
 import { ProtoServices } from '@app/common/types/protoservice.types';
 import { logGrpcException } from '@app/common/utils/exception-logger';
 import { ServiceError } from '@grpc/grpc-js';

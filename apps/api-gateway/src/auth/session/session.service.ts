@@ -17,7 +17,7 @@ import { ProtoServices } from '@app/common/types/protoservice.types';
 import { GrantSessionDto } from '../common/dtos/grant-session.dto';
 import { catchError, firstValueFrom, Observable, take, throwError } from 'rxjs';
 import { ServiceError } from '@grpc/grpc-js';
-import { GrpcException } from '@app/common/classes/exceptions/grpc.exception';
+import { GrpcException } from '@app/common/classes/errors/grpc.exception';
 import { logGrpcException } from '@app/common/utils/exception-logger';
 
 @Injectable()
