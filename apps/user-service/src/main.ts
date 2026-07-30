@@ -20,11 +20,11 @@ async function bootstrap() {
         },
     );
 
-    const configService = app.get(ConfigService);
+    // const configService = app.get(ConfigService);
 
-    app.useGlobalPipes(new ValidationPipe({
-        disableErrorMessages: configService.get('ENVIRONMENT') == 'production' ? true : false, 
-    }));
-    await app.listen();
+    // app.useGlobalPipes(new ValidationPipe({
+    //     disableErrorMessages: configService.get('ENVIRONMENT') == 'production' ? true : false, 
+    // }));
+    // await app.listen();
 }
 void bootstrap();
