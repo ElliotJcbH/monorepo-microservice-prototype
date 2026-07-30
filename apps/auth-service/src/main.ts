@@ -3,9 +3,11 @@ import { AuthServiceAppModule } from './auth-service-app.module';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 // Define other proto package services here
 async function bootstrap() {
+
     const app = await NestFactory.createMicroservice<MicroserviceOptions>(
         AuthServiceAppModule,
         {
@@ -21,7 +23,12 @@ async function bootstrap() {
             },
         },
     );
-    app.useGlobalPipes(new ValidationPipe());
+
+    const configService = app.get(ConfigService);
+
+    app.useGlobalPipes(new ValidationPipe({
+        disableErrorMessages: configService.get('ENVIRONMENT') == 'production' ? true : false, 
+    }));
     await app.listen();
 }
 void bootstrap();
