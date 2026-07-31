@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AuthServiceAppModule } from './auth-service-app.module';
-import { Transport, MicroserviceOptions } from '@nestjs/microservices';
+import { Transport, MicroserviceOptions, RpcException } from '@nestjs/microservices';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -24,11 +24,12 @@ async function bootstrap() {
         },
     );
 
-    // const configService = app.get(ConfigService);
+    const configService = app.get(ConfigService);
 
-    // app.useGlobalPipes(new ValidationPipe({
-    //     disableErrorMessages: configService.get('ENVIRONMENT') == 'production' ? true : false, 
-    // }));
-    // await app.listen();
+    app.useGlobalPipes(new ValidationPipe({
+        disableErrorMessages: configService.get('ENVIRONMENT') == 'production' ? true : false, 
+        exceptionFactory: (errors) => new RpcException(errors),
+    }));
+    await app.listen();
 }
 void bootstrap();
