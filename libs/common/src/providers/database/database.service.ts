@@ -6,7 +6,6 @@ import { Pool, QueryResult, QueryResultRow, DatabaseError } from 'pg';
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     private pool!: Pool;
-    // private recoverableCodes = ['40001', '40P01'];
 
     constructor(private configService: ConfigService) {}
 
@@ -38,15 +37,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         params?: unknown[],
     ): Promise<QueryResult<T>> {
         return await this.pool.query<T>(text, params);
-        // let res: QueryResult<T>;
-        // try {
-        //     res = await this.pool.query<T>(text, params);
-        // } catch (err: unknown) {
-        //     if (err instanceof DatabaseError)
-        //         this.handleQueryRecoveryStrategy(err);
-        //     throw err;
-        // }
-        // return res;
     }
 
     async queryOne<T extends QueryResultRow = QueryResultRow>(
@@ -55,16 +45,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     ): Promise<T> {
         const res = await this.pool.query<T>(text, params);
         return res.rows[0];
-        // let row: T;
-        // try {
-        //     const res = await this.pool.query<T>(text, params);
-        //     row = res.rows[0];
-        // } catch (err: unknown) {
-        //     if (err instanceof DatabaseError)
-        //         this.handleQueryRecoveryStrategy(err);
-        //     throw err;
-        // }
-        // return row;
     }
 
     async getClient() {

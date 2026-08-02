@@ -27,7 +27,7 @@ export class UserServiceClientBridge implements OnModuleInit {
                 take(1),
                 map((response) => {
                     if (response?.user == null) {
-                        throw new Error('User not found');
+                        throw new Error('User not found'); // TODO: Change to something more appropriate
                     }
                     return response;
                 }),

@@ -5,7 +5,7 @@ import { SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import * as argon2 from 'argon2';
 import crypto, { randomUUID } from 'node:crypto';
 import KEY_CONFIG from '../../configs/keys.config';
-import { RefreshTokenRecordService } from './refresh-token-record.service';
+import { RefreshTokenRepository } from './refresh-token-record.service';
 import { RefreshTokenException } from '@app/common/classes/errors/authentication-errors/refresh-token.exception';
 import { AcessTokenException } from '@app/common/classes/errors/authentication-errors/access-token.exception';
 
@@ -13,7 +13,7 @@ import { AcessTokenException } from '@app/common/classes/errors/authentication-e
 export class TokenService {
     constructor(
         private readonly jwtService: JwtService,
-        private readonly tokenRecordService: RefreshTokenRecordService,
+        private readonly tokenRecordService: RefreshTokenRepository,
     ) {}
 
     async createTokens(data: SessionUserInfo): Promise<{
