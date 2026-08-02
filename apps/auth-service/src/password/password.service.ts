@@ -1,84 +1,27 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import {
-    StorePasswordRequest,
-    StorePasswordResponse,
-    VerifyPasswordRequest,
-    VerifyPasswordResponse,
-} from 'proto-gen/auth/v1/password_pb';
-import { DatabaseService } from '../../../../libs/common/src/providers/database/database.service';
-import { RpcException } from '@nestjs/microservices';
+import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { PasswordException } from '@app/common/classes/errors/authentication-errors/password.exception';
+import { PasswordRecordService } from './password-record.service';
 
 @Injectable()
 export class PasswordService {
-    constructor(private db: DatabaseService) {}
+    constructor(private passwordRecordService: PasswordRecordService) {}
 
-    async storePassword(
-        request: StorePasswordRequest,
-    ): Promise<StorePasswordResponse> {
-        const { userId, password } = request;
+    async storePassword(userId: string, password: string): Promise<boolean> {
+        const hashedPassword = await argon2.hash(password);
+        if (await this.passwordRecordService.insert(hashedPassword, userId))
+            return true;
 
-        const hashedPassword = argon2.hash(password);
-
-        try {
-            const query = `
-                INSERT INTO auth.users(password)
-                VALUES ($1)
-                WHERE user_id = $2
-                RETURNING user_id
-            `;
-
-            const res = await this.db.queryOne<{ user_id: string }>(query, [
-                hashedPassword,
-                userId,
-            ]);
-
-            if (!res || !res.user_id) throw new Error();
-        } catch (e) {
-            console.error('Error [Database Error] Failed to store password', e);
-            throw new InternalServerErrorException('Failed to store password');
-        }
-
-        return {
-            isStored: true,
-        };
+        throw new PasswordException(userId, '');
     }
 
-    async verifyPassword(
-        email: string,
-        password: string
-    ): Promise<boolean> {
-        let hashedPassword: string;
-
-        try {
-            const query = `
-                SELECT password FROM auth.users
-                WHERE email = $1;
-            `;
-
-            const res = await this.db.queryOne<{ password: string }>(query, [
-                email,
-            ]);
-            hashedPassword = res.password;
-            if (!hashedPassword) {
-                console.error(
-                    'Error [Bad Request Exception] User does not exist',
-                );
-                throw new RpcException('User does not exist');
-            }
-        } catch (e) {
-            console.error(`Error [Database Error] Failed to get password`);
-            throw new RpcException('Failed to get user');
-        }
+    async verifyPassword(email: string, password: string): Promise<boolean> {
+        const hashedPassword =
+            await this.passwordRecordService.getWithEmail(email);
 
         const isValid = await argon2.verify(hashedPassword, password);
 
-        if (!isValid) {
-            console.error(
-                'Error [Bad Request Exception] Incorrect credentials',
-            );
-            throw new RpcException('Incorrect credentials');
-        }
+        if (!isValid) throw new PasswordException('', email);
 
         return isValid;
     }

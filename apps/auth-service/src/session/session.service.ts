@@ -1,73 +1,50 @@
-import {
-    Inject,
-    Injectable,
-    OnModuleInit,
-} from '@nestjs/common';
-import {
-    SessionInfo,
-    SessionUserInfo,
-} from 'proto-gen/auth/v1/session_pb';
+import { Injectable } from '@nestjs/common';
+import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
 import { PasswordService } from '../password/password.service';
 import { RpcException, type ClientGrpc } from '@nestjs/microservices';
 import {
     GetUserByEmailResponse,
+    User,
     UserServiceClient,
 } from 'proto-gen/user/v1/user_pb';
 import { ProtoServices } from '@app/common/types/protoservice.types';
-import { catchError, firstValueFrom, Observable, take } from 'rxjs';
-import { ServiceError, status } from '@grpc/grpc-js';
+import { firstValueFrom, map, Observable, take } from 'rxjs';
 import IAccessTokenPayload from '../common/interfaces/access-token-payload.interface';
+import { UserServiceClientBridge } from '@app/common/external-clients/user-service/user-client.service';
 
 @Injectable()
-export class SessionService implements OnModuleInit {
-    private extUserService!: UserServiceClient;
-
+export class SessionService {
     constructor(
         private tokenService: TokenService,
         private passwordService: PasswordService,
-        @Inject('USER_PACKAGE') private userClient: ClientGrpc,
+        private userServiceClientBridge: UserServiceClientBridge,
     ) {}
 
-    onModuleInit() {
-        this.extUserService = this.userClient.getService<UserServiceClient>(
-            ProtoServices.UserService,
-        );
-    }
-
-    /**
-     * @throws {RpcException} Bubbles up from getUserData when something goes wrong with the call to externalUserService.getUserByEmail
-     * @throws {RpcException} Bubbled up from getUserData when the user does not exist
-     */
     async grantSession(email: string, password: string): Promise<SessionInfo> {
         await this.passwordService.verifyPassword(email, password);
-        const userData = await this.getUserData(email);
+        const user = await this.userServiceClientBridge.getUserWithEmail(email);
+        const userInfo = this.userInfoBuilder(user);
 
-        const tokens = await this.tokenService.createTokens(userData);
+        const tokens = await this.tokenService.createTokens(userInfo);
         const session = this.sessionBuilder(
             tokens.accessToken,
             tokens.refreshToken,
+            user,
             tokens.payload,
         );
 
         return session;
     }
 
-    /**
-     * @throws {RpcException} when the payload returned from tokenService.verifyAccessToken is falsy
-     */
     verifySession(accessToken: string): IAccessTokenPayload {
         const payload = this.tokenService.verifyAccessToken(accessToken, {});
-
         return payload;
     }
 
-    /**
-     * @throws {RpcException} when the value returned by tokenService.deleteRefreshToken is falsy
-     */
     async revokeSession(
         accessToken: string,
-        refreshToken: string
+        refreshToken: string,
     ): Promise<boolean> {
         const isDeleted = await this.tokenService.deleteRefreshToken(
             accessToken,
@@ -77,89 +54,38 @@ export class SessionService implements OnModuleInit {
         return isDeleted;
     }
 
-    /**
-     * @throws {RpcException} when any props from tokenService.createTokens result is falsy
-     */
     async renewSession(
         accessToken: string,
-        refreshToken: string
+        refreshToken: string,
     ): Promise<SessionInfo> {
         const payload: IAccessTokenPayload =
             this.tokenService.decodeAccessToken(accessToken);
 
-        const userData = await this.getUserData(payload.user.email);
+        const user = await this.userServiceClientBridge.getUserWithEmail(
+            payload.user.email,
+        );
+        const userInfo = this.userInfoBuilder(user);
 
         const tokens = await this.tokenService.renewAccessToken(
             accessToken,
             refreshToken,
         );
 
-        if (!tokens.accessToken || !tokens.refreshToken || !tokens.payload) {
-            throw new RpcException({
-                code: status.UNKNOWN,
-                message: 'Requested new access token is falsy',
-            });
-        }
-
         const session = this.sessionBuilder(
             tokens.accessToken,
             tokens.refreshToken,
+            user,
             {
                 ...tokens.payload,
-                user: userData,
+                user: userInfo,
             },
         );
 
         return session;
     }
 
-    private sessionBuilder(
-        accessToken: string,
-        refreshToken: string,
-        payload: IAccessTokenPayload,
-    ): SessionInfo {
-        const user: SessionUserInfo = {
-            userId: payload.user.userId,
-            username: payload.user.username,
-            email: payload.user.email,
-            role: payload.user.role,
-            isVerifed: payload.user.isVerifed,
-            createdAt: payload.user.createdAt,
-        };
-
+    private userInfoBuilder(user: User): SessionUserInfo {
         return {
-            accessToken,
-            refreshToken,
-            user,
-            iat: payload.iat || 0, // iat, exp will never be 0
-            exp: payload.exp || 0,
-        };
-    }
-
-    /**
-     * @throws {RpcException} when something goes wrong with the call to externalUserService.getUserByEmail
-     * @throws {RpcException} when the user does not exist
-     */
-    private async getUserData(email: string): Promise<SessionUserInfo> {
-        const res: Observable<GetUserByEmailResponse> = this.extUserService
-            .getUserByEmail({ email })
-            .pipe(
-                take(1),
-                catchError((err: ServiceError) => {
-                    throw new RpcException(err);
-                }),
-            );
-
-        const user = (await firstValueFrom(res))?.user || undefined;
-
-        if (!user || !user.userId) {
-            throw new RpcException({
-                code: status.NOT_FOUND,
-                message: 'User with that email does not exist',
-            });
-        }
-
-        const userData: SessionUserInfo = {
             userId: user.userId,
             username: user.username,
             email: user.email,
@@ -167,7 +93,20 @@ export class SessionService implements OnModuleInit {
             isVerifed: user.isVerifed,
             createdAt: user.createdAt,
         };
+    }
 
-        return userData;
+    private sessionBuilder(
+        accessToken: string,
+        refreshToken: string,
+        user: User,
+        payload: IAccessTokenPayload, // All of the info here is updated
+    ): SessionInfo {
+        return {
+            accessToken,
+            refreshToken,
+            user,
+            iat: payload.iat || 0, // iat, exp will never be 0
+            exp: payload.exp || 0,
+        };
     }
 }

@@ -7,16 +7,28 @@ import * as password from 'proto-gen/auth/v1/password_pb';
 export class PasswordController implements password.PasswordServiceController {
     constructor(private readonly passwordService: PasswordService) {}
 
-    storePassword(
+    async storePassword(
         request: password.StorePasswordRequest,
     ): Promise<password.StorePasswordResponse> {
-        return this.passwordService.storePassword(request);
+        const res = await this.passwordService.storePassword(
+            request.userId,
+            request.password,
+        );
+        return {
+            isStored: res,
+        };
     }
 
-    verifyPassword(
+    async verifyPassword(
         request: password.VerifyPasswordRequest,
     ): Promise<password.VerifyPasswordResponse> {
-        return this.passwordService.verifyPassword(request);
+        const res = await this.passwordService.storePassword(
+            request.email,
+            request.password,
+        );
+        return {
+            isValid: res,
+        };
     }
 
     getChangePasswordToken(

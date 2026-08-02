@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TokenService } from './token.service';
+import { RefreshTokenRecordService } from './refresh-token-record.service';
 
 @Module({
-  providers: [TokenService]
+  imports: [],
+  providers: [TokenService, RefreshTokenRecordService]
 })
 export class TokenModule {}
