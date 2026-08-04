@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { UserServiceClientBridge } from './user-client.service';
+import { UserServiceClientBridge } from './user-service-client-bridge.service';
 
 // Acts as a client that communicates with the external User Service
 @Module({
@@ -22,6 +22,6 @@ import { UserServiceClientBridge } from './user-client.service';
         ]),
     ],
     providers: [UserServiceClientBridge],
-    exports: [UserServiceClientBridge]
+    exports: [UserServiceClientBridge],
 })
 export class UserClientModule {}

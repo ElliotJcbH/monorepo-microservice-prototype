@@ -2,16 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
 import { PasswordService } from '../password/password.service';
-import { RpcException, type ClientGrpc } from '@nestjs/microservices';
 import {
-    GetUserByEmailResponse,
     User,
-    UserServiceClient,
 } from 'proto-gen/user/v1/user_pb';
-import { ProtoServices } from '@app/common/types/protoservice.types';
-import { firstValueFrom, map, Observable, take } from 'rxjs';
 import IAccessTokenPayload from '../common/interfaces/access-token-payload.interface';
-import { UserServiceClientBridge } from '@app/common/external-clients/user-service/user-client.service';
+import { UserServiceClientBridge } from '@app/common/external-clients/user-service/user-service-client-bridge.service';
 
 @Injectable()
 export class SessionService {

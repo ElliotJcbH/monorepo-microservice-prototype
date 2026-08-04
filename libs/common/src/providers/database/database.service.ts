@@ -1,7 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { error } from 'console';
-import { Pool, QueryResult, QueryResultRow, DatabaseError } from 'pg';
+import { Pool, QueryResult, QueryResultRow } from 'pg';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
@@ -29,9 +28,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         console.log('Database connection closed successfully');
     }
 
-    /**
-     * @throws {Database Error} When it encounters an internal database error, also depending on whether queryRecovery can resolve it
-     */
     async query<T extends QueryResultRow = QueryResultRow>(
         text: string,
         params?: unknown[],
