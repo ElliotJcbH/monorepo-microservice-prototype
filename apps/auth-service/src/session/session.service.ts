@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
 import { PasswordService } from '../password/password.service';
-import {
-    User,
-} from 'proto-gen/user/v1/user_pb';
 import IAccessTokenPayload from '../common/interfaces/access-token-payload.interface';
 import { UserServiceClientBridge } from '@app/common/external-clients/user-service/user-service-client-bridge.service';
+import { IUser, IUserRecord } from '@app/common/interfaces/user.interface';
+import { ISessionInfo } from '@app/common/interfaces/session-info.interface';
 
 @Injectable()
 export class SessionService {
@@ -52,7 +51,7 @@ export class SessionService {
     async renewSession(
         accessToken: string,
         refreshToken: string,
-    ): Promise<SessionInfo> {
+    ): Promise<ISessionInfo> {
         const payload: IAccessTokenPayload =
             this.tokenService.decodeAccessToken(accessToken);
 
@@ -79,13 +78,13 @@ export class SessionService {
         return session;
     }
 
-    private userInfoBuilder(user: User): SessionUserInfo {
+    private userInfoBuilder(user: IUserRecord): IUser {
         return {
             userId: user.userId,
             username: user.username,
             email: user.email,
             role: user.role,
-            isVerifed: user.isVerifed,
+            isVerified: user.isVerified,
             createdAt: user.createdAt,
         };
     }
@@ -93,9 +92,9 @@ export class SessionService {
     private sessionBuilder(
         accessToken: string,
         refreshToken: string,
-        user: User,
+        user: IUser,
         payload: IAccessTokenPayload, // All of the info here is updated
-    ): SessionInfo {
+    ): ISessionInfo {
         return {
             accessToken,
             refreshToken,

@@ -1,10 +1,11 @@
-import { ServiceResponseUnexpectedException } from '@app/common/classes/errors/external-errors/service-response-unexpected.exception';
-import { IUserRecord } from '@app/common/interfaces/user-record.interface';
+import { ServiceResponseUnexpectedException } from '@app/common/classes/errors/external/service-response-unexpected.exception';
+import { IUserRecord } from '@app/common/interfaces/user.interface';
 import { ProtoServices } from '@app/common/types/protoservice.types';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import type { ClientGrpc } from '@nestjs/microservices';
 import {
     GetUserByEmailResponse,
+    User,
     UserServiceClient,
 } from 'proto-gen/user/v1/user_pb';
 import { firstValueFrom, map, Observable, take } from 'rxjs';
@@ -37,14 +38,14 @@ export class UserServiceClientBridge implements OnModuleInit {
                 }),
             );
 
-        const user = (await firstValueFrom(res)).user!;
+        const user: User = (await firstValueFrom(res)).user!;
 
         return {
             userId: user.userId,
             username: user.username,
             email: user.email,
             role: user.role,
-            isVerified: user.isVerifed,
+            isVerified: user.isVerified,
             createdAt: user.createdAt || new Date(), // FUUUUUUUUUUUUCK
         };
     }

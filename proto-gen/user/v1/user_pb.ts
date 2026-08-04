@@ -16,7 +16,7 @@ export interface User {
   username: string;
   email: string;
   role: string;
-  isVerifed: boolean;
+  isVerified: boolean;
   createdAt: Date | undefined;
 }
 

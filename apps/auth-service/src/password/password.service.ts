@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { PasswordException } from '@app/common/classes/errors/authentication-errors/password.exception';
+import { PasswordException } from '@app/common/classes/errors/authentication/password.exception';
 import { PasswordRecordService } from './password-record.service';
 
 @Injectable()

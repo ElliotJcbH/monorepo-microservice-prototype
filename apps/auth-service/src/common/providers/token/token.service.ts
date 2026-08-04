@@ -6,8 +6,8 @@ import * as argon2 from 'argon2';
 import crypto, { randomUUID } from 'node:crypto';
 import KEY_CONFIG from '../../configs/keys.config';
 import { RefreshTokenRepository } from './refresh-token-record.service';
-import { RefreshTokenException } from '@app/common/classes/errors/authentication-errors/refresh-token.exception';
-import { AcessTokenException } from '@app/common/classes/errors/authentication-errors/access-token.exception';
+import { RefreshTokenException } from '@app/common/classes/errors/authentication/refresh-token.exception';
+import { AcessTokenException } from '@app/common/classes/errors/authentication/access-token.exception';
 
 @Injectable()
 export class TokenService {

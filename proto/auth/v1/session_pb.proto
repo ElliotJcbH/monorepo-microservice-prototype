@@ -24,7 +24,7 @@ message SessionUserInfo {
     string username = 2;
     string email = 3;
     string role = 4; 
-    bool is_verifed = 5;
+    bool is_verified = 5;
     google.protobuf.Timestamp created_at = 6;
 }
 
