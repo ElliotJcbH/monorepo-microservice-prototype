@@ -1,22 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import IAccessTokenPayload from '../../interfaces/access-token-payload.interface';
-import { SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import * as argon2 from 'argon2';
 import crypto, { randomUUID } from 'node:crypto';
 import KEY_CONFIG from '../../configs/keys.config';
-import { RefreshTokenRepository } from './refresh-token-record.service';
 import { RefreshTokenException } from '@app/common/classes/errors/authentication/refresh-token.exception';
 import { AcessTokenException } from '@app/common/classes/errors/authentication/access-token.exception';
+import { IUser } from '@app/common/interfaces/user.interface';
+import { RefreshTokenRecordService } from './refresh-token-record.service';
 
 @Injectable()
 export class TokenService {
     constructor(
         private readonly jwtService: JwtService,
-        private readonly tokenRecordService: RefreshTokenRepository,
+        private readonly tokenRecordService: RefreshTokenRecordService,
     ) {}
 
-    async createTokens(data: SessionUserInfo): Promise<{
+    async createTokens(data: IUser): Promise<{
         accessToken: string;
         refreshToken: string;
         payload: IAccessTokenPayload;
@@ -37,13 +37,13 @@ export class TokenService {
         };
     }
 
-    createAccessToken(data: SessionUserInfo): string {
+    createAccessToken(data: IUser): string {
         const payload = {
             userId: data.userId,
             username: data.username,
             email: data.email,
             role: data.role,
-            isVerifed: data.isVerifed,
+            isVerifed: data.isVerified,
             createdAt: data.createdAt,
         };
 

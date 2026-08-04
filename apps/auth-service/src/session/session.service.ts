@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { SessionInfo, SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 import { TokenService } from '../common/providers/token/token.service';
 import { PasswordService } from '../password/password.service';
 import IAccessTokenPayload from '../common/interfaces/access-token-payload.interface';
@@ -15,7 +14,7 @@ export class SessionService {
         private userServiceClientBridge: UserServiceClientBridge,
     ) {}
 
-    async grantSession(email: string, password: string): Promise<SessionInfo> {
+    async grantSession(email: string, password: string): Promise<ISessionInfo> {
         await this.passwordService.verifyPassword(email, password);
         const user = await this.userServiceClientBridge.getUserWithEmail(email);
         const userInfo = this.userInfoBuilder(user);

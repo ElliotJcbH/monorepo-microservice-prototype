@@ -1,8 +1,8 @@
+import { IUser } from '@app/common/interfaces/user.interface';
 import { JwtPayload } from 'jsonwebtoken';
-import { SessionUserInfo } from 'proto-gen/auth/v1/session_pb';
 
 interface IAccessTokenPayload extends JwtPayload {
-    user: SessionUserInfo;
+    user: IUser;
 }
 
 export default IAccessTokenPayload;
